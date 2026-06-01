@@ -1,12 +1,12 @@
 import os
 from abc import ABC, abstractmethod
-from decimal import Decimal
+from decimal import Decimal  # floats mess up money
 
 DIV = "----------------------------------------"
 
 
 def clear_screen():
-    os.system("cls" if os.name == "nt" else "clear")
+    os.system("cls" if os.name == "nt" else "clear")  # cls on windows just to keep console clean
 
 
 # step 1: transaction interface
@@ -16,7 +16,6 @@ class ITransaction(ABC):
         pass
 
 
-# basic user for login
 class User:
     def __init__(self, username, password):
         self.username = username
@@ -345,7 +344,7 @@ def create_account(is_admin=False, logged_in_customer=None):
 
 def view_all_accounts(logged_in_customer=None):
     if logged_in_customer is not None:
-        customer_list = [logged_in_customer]
+        customer_list = [logged_in_customer]  # only show their stuff
         title = "\n  Your accounts:"
     else:
         if not customers:
@@ -428,7 +427,7 @@ def transfer(is_admin=False, logged_in_customer=None):
             print("\n  Amount must be greater than 0\n")
             return
         balance_before = from_acct.balance
-        from_acct.withdraw(amount)
+        from_acct.withdraw(amount)  # doesn't tell us if it failed, so check balance
         if from_acct.balance == balance_before:
             print("\n  Transfer cancelled (withdrawal rules blocked it)\n")
             return
