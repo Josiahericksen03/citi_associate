@@ -81,6 +81,14 @@ function deleteAccount(id) {
   return deletedAccount;
 }
 
+function removeAccountsByCustomerId(customerId) {
+  for (let i = accounts.length - 1; i >= 0; i -= 1) {
+    if (accounts[i].customerId === customerId) {
+      accounts.splice(i, 1);
+    }
+  }
+}
+
 module.exports = {
   getAllAccounts,
   getAccountById,
@@ -88,4 +96,5 @@ module.exports = {
   createAccount,
   updateAccount,
   deleteAccount,
+  removeAccountsByCustomerId,
 };

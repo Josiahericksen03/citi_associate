@@ -26,7 +26,13 @@ function getAccountByName(req, res) {
 
 function createAccount(req, res) {
   const { customerId, accountNumber, accountType, balance } = req.body;
-  if (!customerId || !accountNumber || !accountType || !balance) {
+  if (
+    !customerId ||
+    !accountNumber ||
+    !accountType ||
+    balance === undefined ||
+    balance === null
+  ) {
     return res.status(400).json({ message: "All fields are required" });
   }
 

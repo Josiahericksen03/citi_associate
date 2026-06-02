@@ -1,5 +1,6 @@
 const { customers } = require("../data/customer.data");
 const Customer = require("../models/customer.model");
+const accountService = require("./account.service");
 
 
 
@@ -64,6 +65,7 @@ function deleteCustomer(id) {
   }
   //remove customer from list, then clear accounts, return deleted customer
   const [deletedCustomer] = customers.splice(index, 1);
+  accountService.removeAccountsByCustomerId(numericId);
   deletedCustomer.accounts = [];
   return deletedCustomer;
 }
