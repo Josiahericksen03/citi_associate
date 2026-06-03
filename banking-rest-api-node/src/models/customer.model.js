@@ -1,10 +1,12 @@
-class Customer {
-  constructor({ id, name, email, accounts = [] }) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.accounts = accounts;
-  }
-}
+const mongoose = require("mongoose");
 
-module.exports = Customer;
+const customerSchema = new mongoose.Schema(
+  {
+    id: { type: Number, required: true, unique: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+  },
+  { versionKey: false }
+);
+
+module.exports = mongoose.model("Customer", customerSchema);

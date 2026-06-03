@@ -1,41 +1,39 @@
-const { accounts } = require("../data/account.data");
-const { customers } = require("../data/customer.data");
 const Account = require("../models/account.model");
+const Customer = require("../models/customer.model");
+const { getNextId } = require("../utils/idHelper");
 
-function getAllAccounts() {
-  return accounts;
+async function getAllAccounts() {
+  return Account.find().lean();
 }
 
-function getAccountById(id) {
-  return accounts.find((account => account.id === Number(id)));
+async function getAccountById(id) {
+  return Account.findOne({ id: Number(id) }).lean();
 }
 
-function getAccountByName(name) {
-  const matchingCustomerIds = customers
-    .filter((customer) =>
-      customer.name.toLowerCase().includes(name.toLowerCase())
-    )
-    .map((customer) => customer.id);
+async function getAccountByName(name) {
+  const matchingCustomers = await Customer.find({
+    name: { $regex: name, $options: "i" },
+  })
+    .select("id")
+    .lean();
 
-  return accounts.filter((account) =>
-    matchingCustomerIds.includes(account.customerId)
-  );
+  const customerIds = matchingCustomers.map((customer) => customer.id);
+
+  return Account.find({ customerId: { $in: customerIds } }).lean();
 }
 
-function createAccount(accountData) {
-  const customer = customers.find(
-    (c) => c.id === Number(accountData.customerId)
-  );
+async function createAccount(accountData) {
+  const customer = await Customer.findOne({
+    id: Number(accountData.customerId),
+  }).lean();
+
   if (!customer) {
     return null;
   }
 
-  const nextId =
-    accounts.length > 0
-      ? Math.max(...accounts.map((account) => account.id)) + 1
-      : 1;
+  const nextId = await getNextId(Account);
 
-  const account = new Account({
+  const account = await Account.create({
     id: nextId,
     customerId: Number(accountData.customerId),
     accountNumber: accountData.accountNumber,
@@ -43,50 +41,24 @@ function createAccount(accountData) {
     balance: accountData.balance,
   });
 
-  accounts.push(account);
-  customer.accounts.push(account);
+  return account.toObject();
+}
+
+async function updateAccount(id, accountData) {
+  const account = await Account.findOneAndUpdate(
+    { id: Number(id) },
+    {
+      accountType: accountData.accountType,
+      balance: accountData.balance,
+    },
+    { new: true }
+  ).lean();
+
   return account;
 }
 
-function updateAccount(id, accountData) {
-  const account = getAccountById(id);
-  if (!account) {
-    return null;
-  }
-
-  account.accountType = accountData.accountType;
-  account.balance = accountData.balance;
-  return account;
-}
-
-function deleteAccount(id) {
-  const numericId = Number(id);
-  const index = accounts.findIndex((a) => a.id === numericId);
-  if (index === -1) {
-    return null;
-  }
-
-  const [deletedAccount] = accounts.splice(index, 1);
-
-  const customer = customers.find((c) => c.id === deletedAccount.customerId);
-  if (customer) {
-    const customerAccountIndex = customer.accounts.findIndex(
-      (a) => a.id === numericId
-    );
-    if (customerAccountIndex !== -1) {
-      customer.accounts.splice(customerAccountIndex, 1);
-    }
-  }
-
-  return deletedAccount;
-}
-
-function removeAccountsByCustomerId(customerId) {
-  for (let i = accounts.length - 1; i >= 0; i -= 1) {
-    if (accounts[i].customerId === customerId) {
-      accounts.splice(i, 1);
-    }
-  }
+async function deleteAccount(id) {
+  return Account.findOneAndDelete({ id: Number(id) }).lean();
 }
 
 module.exports = {
@@ -96,5 +68,4 @@ module.exports = {
   createAccount,
   updateAccount,
   deleteAccount,
-  removeAccountsByCustomerId,
 };

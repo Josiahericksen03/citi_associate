@@ -1,73 +1,97 @@
 const accountService = require("../services/account.service");
 
-function getAllAccounts(req, res) {
-  const accounts = accountService.getAllAccounts();
-  return res.status(200).json(accounts);
+async function getAllAccounts(req, res) {
+  try {
+    const accounts = await accountService.getAllAccounts();
+    return res.status(200).json(accounts);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
 }
 
-function getAccountById(req, res) {
-  const { id } = req.params;
-  const account = accountService.getAccountById(id);
-  if (!account) {
-    return res.status(404).json({ message: "Account not found" });
+async function getAccountById(req, res) {
+  try {
+    const { id } = req.params;
+    const account = await accountService.getAccountById(id);
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+    return res.status(200).json(account);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
   }
-  return res.status(200).json(account);
 }
 
-function getAccountByName(req, res) {
-  const { name } = req.query;
-  if (!name) {
-    return res.status(400).json({ message: "Name query parameter is required" });
-  }
+async function getAccountByName(req, res) {
+  try {
+    const { name } = req.query;
+    if (!name) {
+      return res.status(400).json({ message: "Name query parameter is required" });
+    }
 
-  const accounts = accountService.getAccountByName(name);
-  return res.status(200).json(accounts);
+    const accounts = await accountService.getAccountByName(name);
+    return res.status(200).json(accounts);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
 }
 
-function createAccount(req, res) {
-  const { customerId, accountNumber, accountType, balance } = req.body;
-  if (
-    !customerId ||
-    !accountNumber ||
-    !accountType ||
-    balance === undefined ||
-    balance === null
-  ) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
+async function createAccount(req, res) {
+  try {
+    const { customerId, accountNumber, accountType, balance } = req.body;
+    if (
+      !customerId ||
+      !accountNumber ||
+      !accountType ||
+      balance === undefined ||
+      balance === null
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
 
-  const account = accountService.createAccount({
-    customerId,
-    accountNumber,
-    accountType,
-    balance,
-  });
-  if (!account) {
-    return res.status(404).json({ message: "Customer not found" });
+    const account = await accountService.createAccount({
+      customerId,
+      accountNumber,
+      accountType,
+      balance,
+    });
+    if (!account) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    return res.status(201).json(account);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
   }
-  return res.status(201).json(account);
 }
 
-function updateAccount(req, res) {
-  const { id } = req.params;
-  const { accountType, balance } = req.body;
-  if (!accountType || balance === undefined || balance === null) {
-    return res.status(400).json({ message: "accountType and balance are required" });
+async function updateAccount(req, res) {
+  try {
+    const { id } = req.params;
+    const { accountType, balance } = req.body;
+    if (!accountType || balance === undefined || balance === null) {
+      return res.status(400).json({ message: "accountType and balance are required" });
+    }
+    const account = await accountService.updateAccount(id, { accountType, balance });
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+    return res.status(200).json(account);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
   }
-  const account = accountService.updateAccount(id, { accountType, balance });
-  if (!account) {
-    return res.status(404).json({ message: "Account not found" });
-  }
-  return res.status(200).json(account);
 }
 
-function deleteAccount(req, res) {
-  const { id } = req.params;
-  const account = accountService.deleteAccount(id);
-  if (!account) {
-    return res.status(404).json({ message: "Account not found" });
+async function deleteAccount(req, res) {
+  try {
+    const { id } = req.params;
+    const account = await accountService.deleteAccount(id);
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+    return res.status(200).json(account);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
   }
-  return res.status(200).json(account);
 }
 
 module.exports = {

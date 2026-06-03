@@ -1,11 +1,14 @@
-class Account {
-  constructor({ id, customerId, accountNumber, accountType, balance }) {
-    this.id = id;
-    this.customerId = customerId;
-    this.accountNumber = accountNumber;
-    this.accountType = accountType;
-    this.balance = balance;
-  }
-}
+const mongoose = require("mongoose");
 
-module.exports = Account;
+const accountSchema = new mongoose.Schema(
+  {
+    id: { type: Number, required: true, unique: true },
+    customerId: { type: Number, required: true },
+    accountNumber: { type: String, required: true },
+    accountType: { type: String, required: true },
+    balance: { type: Number, required: true },
+  },
+  { versionKey: false }
+);
+
+module.exports = mongoose.model("Account", accountSchema);

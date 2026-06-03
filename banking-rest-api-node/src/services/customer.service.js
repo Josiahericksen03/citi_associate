@@ -1,23 +1,38 @@
-const { customers } = require("../data/customer.data");
 const Customer = require("../models/customer.model");
-const accountService = require("./account.service");
+const { getNextId } = require("../utils/idHelper");
+const {
+  attachAccountsToCustomer,
+  attachAccountsToCustomers,
+} = require("../utils/customerHelpers");
 
-
-
-function getAllCustomers() {
-  return customers;
+async function removeAccountsByCustomerId(customerId) {
+  const Account = require("../models/account.model");
+  await Account.deleteMany({ customerId });
 }
 
-function getCustomerById(id) {
-  return customers.find((customer => customer.id === Number(id)));
+async function getAllCustomers() {
+  const customers = await Customer.find().lean();
+  return attachAccountsToCustomers(customers);
 }
 
-function getCustomerByName(name) {
-  return customers.filter(c => c.name.toLowerCase().includes(name.toLowerCase()));
+async function getCustomerById(id) {
+  const customer = await Customer.findOne({ id: Number(id) }).lean();
+  if (!customer) {
+    return null;
+  }
+  return attachAccountsToCustomer(customer);
 }
 
-function getAllPremiumCustomers() {
+async function getCustomerByName(name) {
+  const customers = await Customer.find({
+    name: { $regex: name, $options: "i" },
+  }).lean();
+  return attachAccountsToCustomers(customers);
+}
+
+async function getAllPremiumCustomers() {
   const PREMIUM_THRESHOLD = 10000;
+  const customers = await getAllCustomers();
 
   return customers.filter((customer) => {
     const totalBalance = customer.accounts.reduce(
@@ -28,46 +43,49 @@ function getAllPremiumCustomers() {
   });
 }
 
-function createCustomer(customerData) {
-  const nextId =
-    customers.length > 0
-      ? Math.max(...customers.map((customer) => customer.id)) + 1
-      : 1;
+async function createCustomer(customerData) {
+  const nextId = await getNextId(Customer);
 
-  const customer = new Customer({
+  const customer = await Customer.create({
     id: nextId,
     name: customerData.name,
     email: customerData.email,
-    accounts: [],
   });
 
-  customers.push(customer);
-  return customer;
+  return {
+    ...customer.toObject(),
+    accounts: [],
+  };
 }
 
-function updateCustomer(id, customerData) {
-  const customer = getCustomerById(id);
+async function updateCustomer(id, customerData) {
+  const customer = await Customer.findOneAndUpdate(
+    { id: Number(id) },
+    { name: customerData.name, email: customerData.email },
+    { new: true }
+  ).lean();
+
   if (!customer) {
     return null;
   }
 
-  customer.name = customerData.name;
-  customer.email = customerData.email;
-  return customer;
+  return attachAccountsToCustomer(customer);
 }
 
-function deleteCustomer(id) {
+async function deleteCustomer(id) {
   const numericId = Number(id);
-  //turn id into number, find customer id in list
-  const index = customers.findIndex((c) => c.id === numericId);
-  if (index === -1) {
+  const customer = await Customer.findOneAndDelete({ id: numericId }).lean();
+
+  if (!customer) {
     return null;
   }
-  //remove customer from list, then clear accounts, return deleted customer
-  const [deletedCustomer] = customers.splice(index, 1);
-  accountService.removeAccountsByCustomerId(numericId);
-  deletedCustomer.accounts = [];
-  return deletedCustomer;
+
+  await removeAccountsByCustomerId(numericId);
+
+  return {
+    ...customer,
+    accounts: [],
+  };
 }
 
 module.exports = {
