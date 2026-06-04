@@ -23,7 +23,8 @@ async function connectDatabase() {
     cached.promise = mongoose
       .connect(uri, {
         bufferCommands: false,
-        serverSelectionTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 15000,
+        family: 4,
       })
       .then(() => {
         console.log("MongoDB connected");
