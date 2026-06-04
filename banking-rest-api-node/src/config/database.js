@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+let cached = global.mongoose;
+
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
 async function connectDatabase() {
   const uri = process.env.MONGODB_URI;
 
@@ -9,8 +15,24 @@ async function connectDatabase() {
     );
   }
 
-  await mongoose.connect(uri);
-  console.log("MongoDB connected");
+  if (cached.conn) {
+    return cached.conn;
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(uri, {
+        bufferCommands: false,
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then(() => {
+        console.log("MongoDB connected");
+        return mongoose.connection;
+      });
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
 }
 
 module.exports = connectDatabase;

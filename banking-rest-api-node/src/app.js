@@ -28,7 +28,7 @@ app.use("/api/accounts", accountRoutes);
 
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Banking REST API is running (MongoDB).",
+    message: "Banking REST API is running.",
   });
 });
 
