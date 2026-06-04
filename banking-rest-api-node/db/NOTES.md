@@ -68,12 +68,26 @@ Deleting a customer also deletes their accounts in the service layer (`deleteMan
 
 `tests/helpers/resetData.js` wipes and reseeds before each test so tests stay predictable.
 
+## Full stack (React frontend)
+
+Branch `feat/react-frontend` adds `banking-react-frontend/` (Vite + React).
+
+```
+React :5173  →  Express :3000  →  MongoDB Atlas
+```
+
+Backend uses the `cors` package; default allowed origin is `http://localhost:5173` (`CORS_ORIGIN` in `.env`).
+
 ## Useful commands
 
 ```bash
+# API
 npm run dev    # connect + seed-if-empty + API
 npm run seed   # connect + seed-if-empty only
 npm test       # Jest with in-memory MongoDB
+
+# React UI (separate folder)
+cd ../banking-react-frontend && npm run dev
 ```
 
 ## Config reminder
